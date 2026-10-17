@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공주 온-길 (Gongju On-Road) - 스마트 로컬 관광</title>
+    <!-- 카카오 지도 API 불러오기 (발급받은 JavaScript 키 적용 완료) -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ef66a142bfc276b5cdb2c1539d86c551"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
+        body { background-color: #f5f6f8; color: #333; }
+
+        /* 헤더 디자인 */
+        header { background: #2b6cb0; color: white; padding: 15px 20px; text-align: center; font-weight: bold; font-size: 1.2rem; }
+        header span { font-size: 0.85rem; display: block; font-weight: normal; margin-top: 4px; opacity: 0.9; }
+
+        /* 레이아웃 컨테이너 */
+        .container { display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; padding: 15px; gap: 15px; }
+
+        /* 지도 영역 */
+        #map { width: 100%; height: 380px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* 관광지 선택 목록 섹션 */
+        .section-card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .section-title { font-size: 1.05rem; font-weight: bold; margin-bottom: 12px; color: #2d3748; display: flex; justify-content: space-between; align-items: center; }
+
+        /* 장소 체크박스 리스트 */
+        .place-list { display: flex; flex-direction: column; gap: 10px; }
+        .place-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; }
+        .place-info { display: flex; align-items: center; gap: 10px; }
+        .badge { font-size: 0.75rem; padding: 3px 7px; border-radius: 4px; color: white; font-weight: bold; }
+        .badge-core { background-color: #ed8936; } /* 왕도심 (주요 역사) */
+        .badge-sub { background-color: #38a169; }  /* 원도심/부도심 (숨은 명소) */
+
+        /* 버튼 디자인 */
+        .btn-calc { width: 100%; padding: 14px; background-color: #2b6cb0; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .btn-calc:hover { background-color: #2c5282; }
+
+        /* 결과 창 섹션 */
+        .result-box { display: none; background: #ebf8ff; border: 1px solid #bee3f8; padding: 16px; border-radius: 12px; margin-top: 10px; }
+        .result-title { font-weight: bold; color: #2b6cb0; margin-bottom: 8px; }
+        .route-path { font-size: 0.95rem; font-weight: bold; color: #2d3748; line-height: 1.6; }
+        .sub-recommend-notice { font-size: 0.85rem; color: #2f855a; margin-top: 10px; background: #f0fff4; padding: 8px; border-radius: 6px; border: 1px solid #c6f6d5; }
+    </style>
+</head>
+<body>
+
+    <header>
+        공주 온-길 (Gongju On-Road)
+        <span>원도심 & 부도심 상생 최적 루트 추천 시스템</span>
+    </header>
+
+    <div class="container">
+        <!-- 1. 카카오 지도 표시 영역 -->
+        <div id="map"></div>
+
+        <!-- 2. 장소 선택 바구니 -->
+        <div class="section-card">
+            <div class="section-title">
+                📍 가고 싶은 명소 선택
+                <span style="font-size: 0.8rem; font-weight: normal; color: #718096;">(원하는 곳을 체크하세요)</span>
+            </div>
+            
+            <div class="place-list" id="placeList">
+                <!-- 자바스크립트로 DB 목록이 로드됩니다 -->
+            </div>
+
+            <button class="btn-calc" onclick="calculateBestRoute()">✨ AI 최적 방문 동선 생성하기</button>
+        </div>
+
+        <!-- 3. 추천 결과 표시 영역 -->
+        <div class="result-box" id="resultBox">
+            <div class="result-title">🗺️ 추천 최적 코스 안내</div>
+            <div class="route-path" id="routePath"></div>
+            <div class="sub-recommend-notice" id="subNotice"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // [1] 장소 데이터베이스 (GPS 좌표 등록)
+        // ==========================================
+        const placesDB = [
+            { id: 0, name: "공산성", type: "core", lat: 36.4623, lng: 127.1264, desc: "왕도심 대표 역사 유적지" },
+            { id: 1, name: "무령왕릉과 왕릉원", type: "core", lat: 36.4601, lng: 127.1132, desc: "백제 웅진기 왕릉군" },
+            { id: 2, name: "제민천 카페거리", type: "sub", lat: 36.4521, lng: 127.1223, desc: "원도심 레트로 감성 골목길" },
+            { id: 3, name: "공주 산성시장", type: "sub", lat: 36.4565, lng: 127.1251, desc: "원도심 밤 먹거리 & 전통시장" },
+            { id: 4, name: "유구색동수국정원", type: "sub", lat: 36.5412, lng: 126.9234, desc: "부도심 유구읍 감성 자연 스팟" },
+            { id: 5, name: "마곡사", type: "sub", lat: 36.5583, lng: 127.0125, desc: "부도심 사곡면 천년고찰" }
+        ];
+
+        let map;
+        let markers = [];
+
+        // ==========================================
+        // [2] 카카오 지도 생성 및 목록 출력
+        // ==========================================
+        window.onload = function() {
+            const mapContainer = document.getElementById('map');
+            const mapOption = {
+                center: new kakao.maps.LatLng(36.4565, 127.1150),
+                level: 8
+            };
+            map = new kakao.maps.Map(mapContainer, mapOption);
+
+            // 장소 리스트 생성
+            const placeListContainer = document.getElementById('placeList');
+            placesDB.forEach(place => {
+                const badgeClass = place.type === 'core' ? 'badge-core' : 'badge-sub';
+                const badgeText = place.type === 'core' ? '왕도심' : '부도심/원도심';
+
+                const itemHTML = `
+                    <div class="place-item">
+                        <div class="place-info">
+                            <input type="checkbox" id="place-${place.id}" value="${place.id}" onchange="updateMarkers()">
+                            <label for="place-${place.id}" style="cursor:pointer;">
+                                <strong>${place.name}</strong> 
+                                <span style="font-size:0.8rem; color:#718096; display:block;">${place.desc}</span>
+                            </label>
+                        </div>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                `;
+                placeListContainer.innerHTML += itemHTML;
+            });
+        };
+
+        // 체크박스 선택 시 마커 표시
+        function updateMarkers() {
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+
+            const selectedIds = getSelectedPlaceIds();
+            const bounds = new kakao.maps.LatLngBounds();
+
+            selectedIds.forEach(id => {
+                const place = placesDB.find(p => p.id === id);
+                const loc = new kakao.maps.LatLng(place.lat, place.lng);
+
+                const marker = new kakao.maps.Marker({
+                    position: loc,
+                    map: map
+                });
+                markers.push(marker);
+                bounds.extend(loc);
+            });
+
+            if (selectedIds.length > 0) {
+                map.setBounds(bounds);
+            }
+        }
+
+        function getSelectedPlaceIds() {
+            const checkboxes = document.querySelectorAll('#placeList input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => parseInt(cb.value));
+        }
+
+        // ==========================================
+        // [3] 최적 경로 정렬 알고리즘 (위경도 거리 계산)
+        // ==========================================
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function calculateBestRoute() {
+            const selectedIds = getSelectedPlaceIds();
+
+            if (selectedIds.length < 2) {
+                alert("최적 경로를 계산하려면 최소 2개 이상의 장소를 선택해주세요!");
+                return;
+            }
+
+            let unvisited = selectedIds.map(id => placesDB.find(p => p.id === id));
+            let current = unvisited.shift();
+            let route = [current];
+
+            while (unvisited.length > 0) {
+                let nearestIdx = 0;
+                let minDistance = getDistance(current.lat, current.lng, unvisited[0].lat, unvisited[0].lng);
+
+                for (let i = 1; i < unvisited.length; i++) {
+                    let dist = getDistance(current.lat, current.lng, unvisited[i].lat, unvisited[i].lng);
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        nearestIdx = i;
+                    }
+                }
+                current = unvisited.splice(nearestIdx, 1)[0];
+                route.push(current);
+            }
+
+            renderResult(route);
+        }
+
+        // ==========================================
+        // [4] 결과 출력 및 혜택 메시지
+        // ==========================================
+        function renderResult(route) {
+            const resultBox = document.getElementById('resultBox');
+            const routePath = document.getElementById('routePath');
+            const subNotice = document.getElementById('subNotice');
+
+            const pathText = route.map(p => p.name).join(" ➔ ");
+            routePath.innerHTML = pathText;
+
+            const hasSubPlace = route.some(p => p.type === 'sub');
+            if (hasSubPlace) {
+                subNotice.innerHTML = "🌱 <strong>부도심 상생 코스 포함 완료!</strong><br>원도심/부도심 명소가 포함되어 공주 산성시장 및 제민천 카페 10% 할인 쿠폰이 자동 발급됩니다.";
+            } else {
+                subNotice.innerHTML = "💡 <strong>추천 팁:</strong> 제민천 카페거리나 유구 수국정원을 추가하시면 부도심 할인 쿠폰 혜택을 받으실 수 있습니다!";
+            }
+
+            resultBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
