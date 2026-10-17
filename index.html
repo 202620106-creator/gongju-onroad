@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>공주 온-길 (Gongju On-Road) - 스마트 로컬 관광</title>
-    <!-- 카카오 지도 API 불러오기 (발급받은 JavaScript 키 적용 완료) -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ef66a142bfc276b5cdb2c1539d86c551"></script>
+    <!-- 카카오 지도 API 불러오기 (https: 명시 및 서비스 로더 반영) -->
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ef66a142bfc276b5cdb2c1539d86c551&autoload=false"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
         body { background-color: #f5f6f8; color: #333; }
@@ -18,7 +18,7 @@
         .container { display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; padding: 15px; gap: 15px; }
 
         /* 지도 영역 */
-        #map { width: 100%; height: 380px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #map { width: 100%; height: 380px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background-color: #e2e8f0; }
 
         /* 관광지 선택 목록 섹션 */
         .section-card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -93,9 +93,19 @@
         let markers = [];
 
         // ==========================================
-        // [2] 카카오 지도 생성 및 목록 출력
+        // [2] 카카오 지도 안전 로딩 및 초기화
         // ==========================================
         window.onload = function() {
+            if (typeof kakao !== 'undefined' && kakao.maps) {
+                kakao.maps.load(function() {
+                    initMapAndList();
+                });
+            } else {
+                alert("카카오 지도 SDK를 불러오지 못했습니다. 카카오 개발자 센터의 [플랫폼 > Web]에 도메인(https://202620106-creator.github.io)이 등록되어 있는지 확인해주세요.");
+            }
+        };
+
+        function initMapAndList() {
             const mapContainer = document.getElementById('map');
             const mapOption = {
                 center: new kakao.maps.LatLng(36.4565, 127.1150),
@@ -105,6 +115,7 @@
 
             // 장소 리스트 생성
             const placeListContainer = document.getElementById('placeList');
+            placeListContainer.innerHTML = ''; // 초기화
             placesDB.forEach(place => {
                 const badgeClass = place.type === 'core' ? 'badge-core' : 'badge-sub';
                 const badgeText = place.type === 'core' ? '왕도심' : '부도심/원도심';
@@ -123,10 +134,11 @@
                 `;
                 placeListContainer.innerHTML += itemHTML;
             });
-        };
+        }
 
         // 체크박스 선택 시 마커 표시
         function updateMarkers() {
+            if (!map) return;
             markers.forEach(m => m.setMap(null));
             markers = [];
 
@@ -156,7 +168,7 @@
         }
 
         // ==========================================
-        // [3] 최적 경로 정렬 알고리즘 (위경도 거리 계산)
+        // [3] 최적 경로 정렬 알고리즘
         // ==========================================
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371;
