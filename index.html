@@ -4,44 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>공주 온-길 (Gongju On-Road) - 백제 고도 스마트 여정</title>
-    <!-- 고풍스러운 명조체 & 본문 폰트 -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
-    <!-- 카카오 지도 API (https: 명시) -->
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ef66a142bfc276b5cdb2c1539d86c551&autoload=false"></script>
     <style>
         :root {
-            --bg-hanji: #F9F6F0;        /* 한지 미색 배경 */
-            --card-bg: #FFFDF9;         /* 순백 한지 카드 */
-            --ink-dark: #1C2536;        /* 전통 기와/먹색 */
-            --gold-accent: #B45309;     /* 백제 금동대향로 황동색 */
-            --gold-light: #FEF3C7;      /* 은은한 금빛 배경 */
-            --celadon-green: #2F6F5E;   /* 청자빛 녹색 */
-            --border-wood: #D6CEC2;     /* 고목 테두리 색 */
+            --bg-hanji: #F4EFE6;
+            --card-bg: #FCF9F2;
+            --ink-dark: #1E242B;
+            --gold-accent: #9A5B13;
+            --gold-light: #F7E8D0;
+            --celadon-green: #2B6253;
+            --border-wood: #C4B59E;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
-        body { background-color: var(--bg-hanji); color: var(--ink-dark); line-height: 1.5; }
+        body {
+            background-color: var(--bg-hanji);
+            background-image: radial-gradient(#DFD5C5 0.6px, transparent 0.6px);
+            background-size: 16px 16px;
+            color: var(--ink-dark);
+            line-height: 1.5;
+        }
 
-        /* 고풍스러운 헤더 */
         header {
-            background: linear-gradient(135deg, #1C2536 0%, #2B3A55 100%);
-            color: #F9F6F0;
+            background: linear-gradient(135deg, #1E242B 0%, #2F3944 100%);
+            color: #F4EFE6;
             padding: 22px 20px;
             text-align: center;
-            border-bottom: 3px solid var(--gold-accent);
-            box-shadow: 0 4px 12px rgba(28, 37, 54, 0.15);
+            border-bottom: 4px solid var(--gold-accent);
+            box-shadow: 0 4px 12px rgba(30, 36, 43, 0.18);
         }
         header h1 {
             font-family: 'Noto Serif KR', serif;
-            font-size: 1.45rem;
-            letter-spacing: 1px;
+            font-size: 1.5rem;
+            letter-spacing: 1.5px;
             margin-bottom: 5px;
         }
-        header span {
-            font-size: 0.85rem;
-            color: #E2D9C8;
-            display: block;
-        }
+        header span { font-size: 0.85rem; color: #DFD5C5; display: block; }
 
         .container {
             display: flex;
@@ -52,44 +51,36 @@
             gap: 16px;
         }
 
-        /* ==========================================
-           지도 디스플레이 고풍스러운 역사 테마 스타일
-           ========================================== */
+        /* 고지도 액자 프레임 */
         .map-wrapper {
             position: relative;
-            border: 3px solid #8C6D46;
+            border: 4px solid #6E5233;
             border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(28, 37, 54, 0.16), inset 0 0 0 2px #F9F6F0;
-            background: #EAE4D7;
+            box-shadow: 0 10px 24px rgba(45, 32, 16, 0.22);
+            background: #E2D7C3;
         }
-        /* 전통 모서리 장식 (액자 느낌) */
         .map-wrapper::before, .map-wrapper::after {
             content: "";
             position: absolute;
-            width: 24px;
-            height: 24px;
-            border: 3px solid var(--gold-accent);
+            width: 28px;
+            height: 28px;
+            border: 3px solid #D99B26;
             z-index: 15;
             pointer-events: none;
         }
         .map-wrapper::before { top: 8px; left: 8px; border-right: none; border-bottom: none; }
         .map-wrapper::after { bottom: 8px; right: 8px; border-left: none; border-top: none; }
 
-        #map {
-            width: 100%;
-            height: 410px;
-            transition: filter 0.3s ease;
-        }
-        /* 고지도(한지/세피아) 필터 효과 */
+        #map { width: 100%; height: 420px; transition: filter 0.3s ease; }
+        /* 한눈에 티가 나는 고풍스러운 백제 고지도 필터 */
         #map.historic-tone {
-            filter: sepia(0.24) contrast(0.96) saturate(0.88) brightness(0.98);
+            filter: sepia(0.45) contrast(0.95) saturate(0.82) brightness(0.95);
         }
-        /* 지도 가장자리 은은한 고풍스러운 비네팅(한지 테두리 음영) */
         .map-vignette {
             position: absolute;
             inset: 0;
-            box-shadow: inset 0 0 38px rgba(82, 58, 28, 0.25);
+            box-shadow: inset 0 0 50px rgba(68, 46, 20, 0.38);
             pointer-events: none;
             z-index: 8;
         }
@@ -107,17 +98,16 @@
             pointer-events: none;
         }
         .map-guide-badge {
-            background: rgba(28, 37, 54, 0.9);
-            color: #FFFDF9;
+            background: rgba(30, 36, 43, 0.92);
+            color: #FCF9F2;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.78rem;
-            border: 1px solid var(--gold-accent);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border: 1px solid #D99B26;
         }
         .btn-map-theme {
             pointer-events: auto;
-            background: rgba(255, 253, 249, 0.95);
+            background: #FCF9F2;
             color: var(--ink-dark);
             border: 1.5px solid var(--gold-accent);
             padding: 5px 11px;
@@ -125,19 +115,17 @@
             font-size: 0.75rem;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
-        /* ==========================================
-           클릭한 관람지 사진 + 상세 설명 카드
-           ========================================== */
+        /* 마커 클릭 시 열리는 사진 + 상세 설명 카드 */
         .detail-card {
             display: none;
             background: var(--card-bg);
-            border: 2px solid var(--gold-accent);
+            border: 2.5px solid var(--gold-accent);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 6px 18px rgba(180, 83, 9, 0.14);
+            box-shadow: 0 8px 20px rgba(154, 91, 19, 0.18);
             animation: fadeIn 0.25s ease-in-out;
         }
         @keyframes fadeIn {
@@ -145,12 +133,12 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 상단 사진 표시 영역 (나중에 사진 추가 시 바로 표시됨) */
+        /* 상단 사진 프레임 */
         .detail-photo-box {
             width: 100%;
-            height: 210px;
-            background: linear-gradient(135deg, #EFE9DD 0%, #E3D9C6 100%);
-            border-bottom: 1.5px solid var(--border-wood);
+            height: 220px;
+            background: linear-gradient(135deg, #EAE0CE 0%, #D9CCB6 100%);
+            border-bottom: 2px solid var(--border-wood);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -162,32 +150,22 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: none; /* 사진 경로가 입력되면 자동으로 보임 */
+            display: none;
         }
         .photo-placeholder {
             text-align: center;
-            color: #6E5D47;
-            padding: 16px;
+            color: #5C472E;
+            padding: 20px;
+            border: 1.5px dashed #9A5B13;
+            border-radius: 10px;
+            background: rgba(252, 249, 242, 0.65);
+            width: 85%;
         }
-        .photo-placeholder .icon {
-            font-size: 2rem;
-            display: block;
-            margin-bottom: 6px;
-        }
-        .photo-placeholder strong {
-            font-family: 'Noto Serif KR', serif;
-            font-size: 0.95rem;
-            display: block;
-            margin-bottom: 3px;
-        }
-        .photo-placeholder span {
-            font-size: 0.78rem;
-            opacity: 0.85;
-        }
+        .photo-placeholder .icon { font-size: 2rem; display: block; margin-bottom: 6px; }
+        .photo-placeholder strong { font-family: 'Noto Serif KR', serif; font-size: 1rem; display: block; margin-bottom: 4px; }
+        .photo-placeholder span { font-size: 0.8rem; }
 
-        .detail-body {
-            padding: 18px;
-        }
+        .detail-body { padding: 18px; }
         .detail-header {
             display: flex;
             justify-content: space-between;
@@ -196,18 +174,8 @@
             border-bottom: 1px solid var(--border-wood);
             padding-bottom: 8px;
         }
-        .detail-title {
-            font-family: 'Noto Serif KR', serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--ink-dark);
-        }
-        .detail-desc {
-            font-size: 0.93rem;
-            color: #3D4856;
-            margin-bottom: 14px;
-            line-height: 1.65;
-        }
+        .detail-title { font-family: 'Noto Serif KR', serif; font-size: 1.25rem; font-weight: 700; }
+        .detail-desc { font-size: 0.94rem; color: #363F49; margin-bottom: 14px; line-height: 1.65; }
         .btn-toggle-place {
             width: 100%;
             padding: 12px;
@@ -216,26 +184,21 @@
             font-size: 0.94rem;
             cursor: pointer;
             border: none;
-            transition: all 0.2s;
         }
         .btn-add { background-color: var(--gold-accent); color: white; }
-        .btn-add:hover { background-color: #92400E; }
-        .btn-remove { background-color: #E5E0D8; color: var(--ink-dark); }
+        .btn-remove { background-color: #E2D9C8; color: var(--ink-dark); }
 
-        /* 명소 선택 목록 카드 */
         .section-card {
             background: var(--card-bg);
             padding: 18px;
             border-radius: 12px;
-            border: 1px solid var(--border-wood);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1.5px solid var(--border-wood);
         }
         .section-title {
             font-family: 'Noto Serif KR', serif;
             font-size: 1.1rem;
             font-weight: 700;
             margin-bottom: 12px;
-            color: var(--ink-dark);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -249,76 +212,40 @@
             padding: 12px 14px;
             border: 1px solid var(--border-wood);
             border-radius: 8px;
-            background: #FAF7F2;
-            transition: all 0.2s;
+            background: #F6F1E7;
         }
-        .place-item.selected {
-            background: var(--gold-light);
-            border-color: var(--gold-accent);
-        }
+        .place-item.selected { background: var(--gold-light); border-color: var(--gold-accent); }
         .place-info { display: flex; align-items: center; gap: 10px; }
-        .place-info input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--gold-accent);
-            cursor: pointer;
-        }
+        .place-info input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--gold-accent); cursor: pointer; }
 
         .badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; color: white; font-weight: 500; }
         .badge-core { background-color: var(--gold-accent); }
         .badge-sub { background-color: var(--celadon-green); }
 
-        /* 최적 동선 생성 버튼 */
         .btn-calc {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #1C2536 0%, #2B3A55 100%);
-            color: #FFFDF9;
-            border: 1px solid var(--gold-accent);
+            background: linear-gradient(135deg, #1E242B 0%, #2F3944 100%);
+            color: #FCF9F2;
+            border: 1.5px solid #D99B26;
             border-radius: 10px;
             font-family: 'Noto Serif KR', serif;
             font-weight: 700;
             font-size: 1.05rem;
             cursor: pointer;
             margin-top: 14px;
-            letter-spacing: 0.5px;
         }
-        .btn-calc:hover { opacity: 0.95; }
 
-        /* 추천 결과 영역 */
         .result-box {
             display: none;
             background: var(--card-bg);
             border: 2px solid var(--celadon-green);
             padding: 18px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(47, 111, 94, 0.1);
         }
-        .result-title {
-            font-family: 'Noto Serif KR', serif;
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--celadon-green);
-            margin-bottom: 10px;
-        }
-        .route-path {
-            font-size: 0.98rem;
-            font-weight: 700;
-            color: var(--ink-dark);
-            line-height: 1.7;
-            background: #F4F1EA;
-            padding: 12px;
-            border-radius: 8px;
-        }
-        .sub-recommend-notice {
-            font-size: 0.88rem;
-            color: #1E4D40;
-            margin-top: 12px;
-            background: #E8F3F0;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid #B7DCD1;
-        }
+        .result-title { font-family: 'Noto Serif KR', serif; font-weight: 700; font-size: 1.1rem; color: var(--celadon-green); margin-bottom: 10px; }
+        .route-path { font-size: 0.98rem; font-weight: 700; background: #EFE9DD; padding: 12px; border-radius: 8px; }
+        .sub-recommend-notice { font-size: 0.88rem; color: #1E4D40; margin-top: 12px; background: #E5F1ED; padding: 10px 12px; border-radius: 8px; border: 1px solid #B5D8CD; }
     </style>
 </head>
 <body>
@@ -329,19 +256,17 @@
     </header>
 
     <div class="container">
-        <!-- 1. 고풍스러운 카카오 지도 표시 영역 -->
         <div class="map-wrapper">
             <div class="map-top-bar">
-                <div class="map-guide-badge">📍 마커를 누르면 사진과 설명이 열립니다</div>
+                <div class="map-guide-badge">📍 마커 클릭 시 사진과 설명이 열립니다</div>
                 <button class="btn-map-theme" id="themeToggleBtn" onclick="toggleMapHistoricTone()">📜 고지도 톤 ON</button>
             </div>
             <div class="map-vignette"></div>
             <div id="map" class="historic-tone"></div>
         </div>
 
-        <!-- 2. 지도 마커 클릭 시 나타나는 사진 + 상세 설명란 -->
+        <!-- 마커 클릭 시 나타나는 사진 + 설명 카드 -->
         <div class="detail-card" id="detailCard">
-            <!-- 상단 사진 프레임 (나중에 image 경로 추가 시 자동 표시) -->
             <div class="detail-photo-box">
                 <img id="detailImg" src="" alt="관람지 사진">
                 <div class="photo-placeholder" id="photoPlaceholder">
@@ -350,31 +275,25 @@
                     <span>추후 직접 촬영한 공주 명소 사진이 이곳에 표시됩니다</span>
                 </div>
             </div>
-
-            <!-- 하단 설명 및 담기 버튼 -->
             <div class="detail-body">
                 <div class="detail-header">
                     <span class="detail-title" id="detailName">관람지 이름</span>
                     <span class="badge" id="detailBadge">권역</span>
                 </div>
-                <p class="detail-desc" id="detailDesc">상세 설명이 이곳에 표시됩니다.</p>
+                <p class="detail-desc" id="detailDesc">상세 설명</p>
                 <button class="btn-toggle-place" id="detailToggleBtn" onclick="toggleCurrentDetailPlace()">방문 코스에 담기</button>
             </div>
         </div>
 
-        <!-- 3. 장소 선택 바구니 -->
         <div class="section-card">
             <div class="section-title">
                 <span>📜 여정 관람지 목록</span>
                 <span style="font-size: 0.8rem; font-family: 'Noto Sans KR'; font-weight: normal; color: #6B7280;">지도 마커 또는 목록 클릭</span>
             </div>
-            
             <div class="place-list" id="placeList"></div>
-
             <button class="btn-calc" onclick="calculateBestRoute()">🧭 최적 백제 여정 동선 그리기</button>
         </div>
 
-        <!-- 4. 추천 결과 표시 영역 -->
         <div class="result-box" id="resultBox">
             <div class="result-title">🏮 추천 최적 관람 동선</div>
             <div class="route-path" id="routePath"></div>
@@ -383,89 +302,21 @@
     </div>
 
     <script>
-        // ==========================================
-        // [1] 공주 관람지 데이터베이스
-        // (나중에 image: "사진파일명.jpg" 형태로 주소를 넣으면 사진이 자동 출력됩니다)
-        // ==========================================
         const placesDB = [
-            {
-                id: 0,
-                name: "공산성",
-                type: "core",
-                lat: 36.4623,
-                lng: 127.1264,
-                image: "", // 예: "gongsanseong.jpg"
-                shortDesc: "백제 웅진시대를 지킨 천년의 산성",
-                fullDesc: "백제가 웅진(공주)으로 천도한 475년부터 538년까지 도성을 방어하던 왕성입니다. 금강을 굽어보는 성곽길을 따라 걸으며 백제 왕실의 기상과 아름다운 야경을 감상할 수 있습니다."
-            },
-            {
-                id: 1,
-                name: "무령왕릉과 왕릉원",
-                type: "core",
-                lat: 36.4601,
-                lng: 127.1132,
-                image: "",
-                shortDesc: "백제 중흥을 이끈 무령왕의 고분군",
-                fullDesc: "도굴되지 않은 채 발견되어 백제 역사의 타임캡슐로 불리는 무령왕릉을 비롯한 웅진시대 왕족들의 무덤이 모여 있는 유네스코 세계유산입니다."
-            },
-            {
-                id: 2,
-                name: "제민천 카페거리",
-                type: "sub",
-                lat: 36.4521,
-                lng: 127.1223,
-                image: "",
-                shortDesc: "옛 물길 따라 흐르는 원도심 감성 골목",
-                fullDesc: "공주 원도심을 가로지르는 제민천을 따라 오래된 한옥과 적산가옥을 개조한 고풍스러운 카페, 독립서점, 공방들이 어우러진 산책 명소입니다."
-            },
-            {
-                id: 3,
-                name: "공주 산성시장",
-                type: "sub",
-                lat: 36.4565,
-                lng: 127.1251,
-                image: "",
-                shortDesc: "공주 알밤과 전통 먹거리가 가득한 시장",
-                fullDesc: "충남을 대표하는 전통시장으로, 공주 특산물인 알밤을 활용한 다양한 주전부리와 정겨운 로컬 맛집, 밤마실 야시장을 즐길 수 있습니다."
-            },
-            {
-                id: 4,
-                name: "유구색동수국정원",
-                type: "sub",
-                lat: 36.5412,
-                lng: 126.9234,
-                image: "",
-                shortDesc: "유구천을 수놓은 중부권 최대 수국 명소",
-                fullDesc: "직물 산업의 역사를 품은 부도심 유구읍의 유구천 수변을 따라 형형색색의 수국이 만개하는 생태 정원으로, 한적하고 아름다운 자연 산책을 즐길 수 있습니다."
-            },
-            {
-                id: 5,
-                name: "마곡사",
-                type: "sub",
-                lat: 36.5583,
-                lng: 127.0125,
-                image: "",
-                shortDesc: "태화산 품에 안긴 천년 고찰 유네스코 유산",
-                fullDesc: "신라 선덕여왕 때 창건된 유서 깊은 사찰로, 봄에는 벚꽃과 신록이, 가을에는 단풍이 계곡과 어우러져 '춘마곡 추갑사'라 불리는 명승지입니다."
-            }
+            { id: 0, name: "공산성", type: "core", lat: 36.4623, lng: 127.1264, image: "", shortDesc: "백제 웅진시대를 지킨 천년의 산성", fullDesc: "백제가 웅진(공주)으로 천도한 475년부터 538년까지 도성을 방어하던 왕성입니다. 금강을 굽어보는 성곽길을 따라 걸으며 백제 왕실의 기상과 아름다운 야경을 감상할 수 있습니다." },
+            { id: 1, name: "무령왕릉과 왕릉원", type: "core", lat: 36.4601, lng: 127.1132, image: "", shortDesc: "백제 중흥을 이끈 무령왕의 고분군", fullDesc: "도굴되지 않은 채 발견되어 백제 역사의 타임캡슐로 불리는 무령왕릉을 비롯한 웅진시대 왕족들의 무덤이 모여 있는 유네스코 세계유산입니다." },
+            { id: 2, name: "제민천 카페거리", type: "sub", lat: 36.4521, lng: 127.1223, image: "", shortDesc: "옛 물길 따라 흐르는 원도심 감성 골목", fullDesc: "공주 원도심을 가로지르는 제민천을 따라 오래된 한옥과 적산가옥을 개조한 고풍스러운 카페, 독립서점, 공방들이 어우러진 산책 명소입니다." },
+            { id: 3, name: "공주 산성시장", type: "sub", lat: 36.4565, lng: 127.1251, image: "", shortDesc: "공주 알밤과 전통 먹거리가 가득한 시장", fullDesc: "충남을 대표하는 전통시장으로, 공주 특산물인 알밤을 활용한 다양한 주전부리와 정겨운 로컬 맛집, 밤마실 야시장을 즐길 수 있습니다." },
+            { id: 4, name: "유구색동수국정원", type: "sub", lat: 36.5412, lng: 126.9234, image: "", shortDesc: "유구천을 수놓은 중부권 최대 수국 명소", fullDesc: "직물 산업의 역사를 품은 부도심 유구읍의 유구천 수변을 따라 형형색색의 수국이 만개하는 생태 정원으로, 한적하고 아름다운 자연 산책을 즐길 수 있습니다." },
+            { id: 5, name: "마곡사", type: "sub", lat: 36.5583, lng: 127.0125, image: "", shortDesc: "태화산 품에 안긴 천년 고찰 유네스코 유산", fullDesc: "신라 선덕여왕 때 창건된 유서 깊은 사찰로, 봄에는 벚꽃과 신록이, 가을에는 단풍이 계곡과 어우러져 '춘마곡 추갑사'라 불리는 명승지입니다." }
         ];
 
-        let map;
-        let selectedIds = new Set();
-        let activeDetailId = null;
-        let mapMarkers = {};
-        let customOverlays = {};
-        let polyline = null;
-        let isHistoricTone = true;
+        let map, selectedIds = new Set(), activeDetailId = null, mapMarkers = {}, customOverlays = {}, polyline = null, isHistoricTone = true;
 
-        // ==========================================
-        // [2] 지도 고지도(역사적 톤) 테마 전환 기능
-        // ==========================================
         function toggleMapHistoricTone() {
             const mapEl = document.getElementById('map');
             const btn = document.getElementById('themeToggleBtn');
             isHistoricTone = !isHistoricTone;
-
             if (isHistoricTone) {
                 mapEl.classList.add('historic-tone');
                 btn.innerText = "📜 고지도 톤 ON";
@@ -475,48 +326,28 @@
             }
         }
 
-        // ==========================================
-        // [3] 카카오 지도 안전 로딩 및 초기화
-        // ==========================================
         window.onload = function() {
             if (typeof kakao !== 'undefined' && kakao.maps) {
-                kakao.maps.load(function() {
-                    initApp();
-                });
-            } else {
-                alert("카카오 지도 SDK를 불러오지 못했습니다. 도메인 설정을 확인해주세요.");
+                kakao.maps.load(initApp);
             }
         };
 
         function initApp() {
-            const mapContainer = document.getElementById('map');
-            const mapOption = {
+            map = new kakao.maps.Map(document.getElementById('map'), {
                 center: new kakao.maps.LatLng(36.4620, 127.1100),
                 level: 8
-            };
-            map = new kakao.maps.Map(mapContainer, mapOption);
-
+            });
             renderPlaceList();
             renderAllMapMarkers();
         }
 
-        // ==========================================
-        // [4] 지도 위 전체 관람지 마커 및 이름표 생성
-        // ==========================================
         function renderAllMapMarkers() {
-            const normalMarkerImg = new kakao.maps.MarkerImage(
-                "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png",
-                new kakao.maps.Size(32, 35)
-            );
-            const selectedMarkerImg = new kakao.maps.MarkerImage(
-                "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
-                new kakao.maps.Size(30, 42)
-            );
+            const normalMarkerImg = new kakao.maps.MarkerImage("https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png", new kakao.maps.Size(32, 35));
+            const selectedMarkerImg = new kakao.maps.MarkerImage("https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png", new kakao.maps.Size(30, 42));
 
             placesDB.forEach(place => {
                 const pos = new kakao.maps.LatLng(place.lat, place.lng);
                 const isSelected = selectedIds.has(place.id);
-
                 if (mapMarkers[place.id]) mapMarkers[place.id].setMap(null);
                 if (customOverlays[place.id]) customOverlays[place.id].setMap(null);
 
@@ -526,61 +357,26 @@
                     image: isSelected ? selectedMarkerImg : normalMarkerImg,
                     title: place.name
                 });
+                kakao.maps.event.addListener(marker, 'click', () => openPlaceDetail(place.id));
 
-                // 마커 클릭 시 사진 + 상세 설명 카드 열기
-                kakao.maps.event.addListener(marker, 'click', function() {
-                    openPlaceDetail(place.id);
-                });
-
-                const labelBg = isSelected ? '#B45309' : '#1C2536';
-                const labelPrefix = isSelected ? '★ ' : '';
-                const overlayContent = `
-                    <div onclick="openPlaceDetail(${place.id})" style="
-                        cursor: pointer;
-                        background: ${labelBg};
-                        color: #FFFDF9;
-                        padding: 4px 9px;
-                        border-radius: 4px;
-                        font-size: 11px;
-                        font-family: 'Noto Serif KR', serif;
-                        font-weight: bold;
-                        border: 1px solid #F9F6F0;
-                        box-shadow: 0 2px 5px rgba(0,0,0,0.35);
-                        margin-top: 4px;
-                        white-space: nowrap;
-                    ">${labelPrefix}${place.name}</div>
-                `;
-
+                const labelBg = isSelected ? '#9A5B13' : '#1E242B';
                 const overlay = new kakao.maps.CustomOverlay({
                     position: pos,
-                    content: overlayContent,
+                    content: `<div onclick="openPlaceDetail(${place.id})" style="cursor:pointer; background:${labelBg}; color:#FCF9F2; padding:4px 9px; border-radius:4px; font-size:11px; font-family:'Noto Serif KR',serif; font-weight:bold; border:1px solid #F4EFE6; box-shadow:0 2px 5px rgba(0,0,0,0.35); margin-top:4px; white-space:nowrap;">${isSelected ? '★ ' : ''}${place.name}</div>`,
                     yAnchor: 0
                 });
                 overlay.setMap(map);
-
                 mapMarkers[place.id] = marker;
                 customOverlays[place.id] = overlay;
             });
         }
 
-        // ==========================================
-        // [5] 마커 클릭 시 사진 영역 + 상세 설명란 열기
-        // ==========================================
         function openPlaceDetail(id) {
             activeDetailId = id;
             const place = placesDB.find(p => p.id === id);
-
-            const detailCard = document.getElementById('detailCard');
             const detailImg = document.getElementById('detailImg');
             const photoPlaceholder = document.getElementById('photoPlaceholder');
-            const placeholderTitle = document.getElementById('placeholderTitle');
 
-            const detailName = document.getElementById('detailName');
-            const detailBadge = document.getElementById('detailBadge');
-            const detailDesc = document.getElementById('detailDesc');
-            const toggleBtn = document.getElementById('detailToggleBtn');
-
-            // 사진 데이터가 있으면 사진 출력, 없으면 한지 액자 플레이스홀더 표시
             if (place.image && place.image.trim() !== "") {
                 detailImg.src = place.image;
                 detailImg.style.display = 'block';
@@ -588,14 +384,16 @@
             } else {
                 detailImg.style.display = 'none';
                 photoPlaceholder.style.display = 'block';
-                placeholderTitle.innerText = `[${place.name}] 현장 사진 준비 중`;
+                document.getElementById('placeholderTitle').innerText = `[${place.name}] 현장 사진 준비 중`;
             }
 
-            detailName.innerText = place.name;
-            detailBadge.innerText = place.type === 'core' ? '왕도심 핵심 유적' : '원도심·부도심 명소';
-            detailBadge.className = 'badge ' + (place.type === 'core' ? 'badge-core' : 'badge-sub');
-            detailDesc.innerText = place.fullDesc;
+            document.getElementById('detailName').innerText = place.name;
+            const badge = document.getElementById('detailBadge');
+            badge.innerText = place.type === 'core' ? '왕도심 핵심 유적' : '원도심·부도심 명소';
+            badge.className = 'badge ' + (place.type === 'core' ? 'badge-core' : 'badge-sub');
+            document.getElementById('detailDesc').innerText = place.fullDesc;
 
+            const toggleBtn = document.getElementById('detailToggleBtn');
             if (selectedIds.has(id)) {
                 toggleBtn.innerText = "✓ 방문 코스에 담김 (클릭 시 해제)";
                 toggleBtn.className = "btn-toggle-place btn-remove";
@@ -604,7 +402,9 @@
                 toggleBtn.className = "btn-toggle-place btn-add";
             }
 
-            detailCard.style.display = 'block';
+            const card = document.getElementById('detailCard');
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             map.panTo(new kakao.maps.LatLng(place.lat, place.lng));
         }
 
@@ -615,117 +415,66 @@
         }
 
         function togglePlaceSelection(id) {
-            if (selectedIds.has(id)) {
-                selectedIds.delete(id);
-            } else {
-                selectedIds.add(id);
-            }
+            selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
             renderPlaceList();
             renderAllMapMarkers();
         }
 
-        // ==========================================
-        // [6] 하단 관람지 목록 렌더링
-        // ==========================================
         function renderPlaceList() {
             const container = document.getElementById('placeList');
-            container.innerHTML = '';
-
-            placesDB.forEach(place => {
+            container.innerHTML = placesDB.map(place => {
                 const isSelected = selectedIds.has(place.id);
-                const badgeClass = place.type === 'core' ? 'badge-core' : 'badge-sub';
-                const badgeText = place.type === 'core' ? '왕도심' : '원도심/부도심';
-
-                const itemHTML = `
+                return `
                     <div class="place-item ${isSelected ? 'selected' : ''}">
                         <div class="place-info">
-                            <input type="checkbox" id="chk-${place.id}" ${isSelected ? 'checked' : ''} onchange="togglePlaceSelection(${place.id})">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="togglePlaceSelection(${place.id})">
                             <div onclick="openPlaceDetail(${place.id})" style="cursor:pointer;">
-                                <strong style="font-family: 'Noto Serif KR', serif;">${place.name}</strong>
+                                <strong style="font-family:'Noto Serif KR',serif;">${place.name}</strong>
                                 <span style="font-size:0.8rem; color:#5A6577; display:block;">${place.shortDesc}</span>
                             </div>
                         </div>
-                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        <span class="badge ${place.type === 'core' ? 'badge-core' : 'badge-sub'}">${place.type === 'core' ? '왕도심' : '원도심/부도심'}</span>
                     </div>
                 `;
-                container.innerHTML += itemHTML;
-            });
+            }).join('');
         }
 
-        // ==========================================
-        // [7] 최적 경로 계산 및 지도 위 경로선 그리기
-        // ==========================================
         function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2)**2;
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
         function calculateBestRoute() {
             const ids = Array.from(selectedIds);
-            if (ids.length < 2) {
-                alert("최적 여정을 그리려면 지도나 목록에서 최소 2곳 이상의 관람지를 담아주세요!");
-                return;
-            }
+            if (ids.length < 2) { alert("최소 2곳 이상의 관람지를 담아주세요!"); return; }
 
             let unvisited = ids.map(id => placesDB.find(p => p.id === id));
-            let current = unvisited.shift();
-            let route = [current];
+            let current = unvisited.shift(), route = [current];
 
             while (unvisited.length > 0) {
-                let nearestIdx = 0;
-                let minDistance = getDistance(current.lat, current.lng, unvisited[0].lat, unvisited[0].lng);
-
+                let nearestIdx = 0, minDistance = getDistance(current.lat, current.lng, unvisited[0].lat, unvisited[0].lng);
                 for (let i = 1; i < unvisited.length; i++) {
                     let dist = getDistance(current.lat, current.lng, unvisited[i].lat, unvisited[i].lng);
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        nearestIdx = i;
-                    }
+                    if (dist < minDistance) { minDistance = dist; nearestIdx = i; }
                 }
                 current = unvisited.splice(nearestIdx, 1)[0];
                 route.push(current);
             }
 
             if (polyline) polyline.setMap(null);
+            const linePath = [], bounds = new kakao.maps.LatLngBounds();
+            route.forEach(p => { const ll = new kakao.maps.LatLng(p.lat, p.lng); linePath.push(ll); bounds.extend(ll); });
 
-            const linePath = [];
-            const bounds = new kakao.maps.LatLngBounds();
-
-            route.forEach(p => {
-                const latLng = new kakao.maps.LatLng(p.lat, p.lng);
-                linePath.push(latLng);
-                bounds.extend(latLng);
-            });
-
-            polyline = new kakao.maps.Polyline({
-                path: linePath,
-                strokeWeight: 5,
-                strokeColor: '#B45309',
-                strokeOpacity: 0.85,
-                strokeStyle: 'shortdash'
-            });
+            polyline = new kakao.maps.Polyline({ path: linePath, strokeWeight: 5, strokeColor: '#9A5B13', strokeOpacity: 0.9, strokeStyle: 'shortdash' });
             polyline.setMap(map);
             map.setBounds(bounds);
 
-            const resultBox = document.getElementById('resultBox');
-            const routePath = document.getElementById('routePath');
-            const subNotice = document.getElementById('subNotice');
-
-            routePath.innerHTML = route.map((p, idx) => `${idx + 1}. ${p.name}`).join(" &nbsp;➔&nbsp; ");
-
-            const hasSubPlace = route.some(p => p.type === 'sub');
-            if (hasSubPlace) {
-                subNotice.innerHTML = "🌿 <strong>공주 상생 여정 혜택 적용!</strong><br>원도심·부도심 명소가 포함되어 공주 산성시장 및 제민천 공방·카페 10% 상생 쿠폰이 발급됩니다.";
-            } else {
-                subNotice.innerHTML = "💡 <strong>여정 추천 팁:</strong> 지도를 둘러보시고 제민천 카페거리나 유구색동수국정원을 함께 담으시면 지역 상생 할인 혜택을 받으실 수 있습니다.";
-            }
-
-            resultBox.style.display = 'block';
+            document.getElementById('routePath').innerHTML = route.map((p, idx) => `${idx + 1}. ${p.name}`).join(" &nbsp;➔&nbsp; ");
+            document.getElementById('subNotice').innerHTML = route.some(p => p.type === 'sub')
+                ? "🌿 <strong>공주 상생 여정 혜택 적용!</strong><br>원도심·부도심 명소가 포함되어 공주 산성시장 및 제민천 공방·카페 10% 상생 쿠폰이 발급됩니다."
+                : "💡 <strong>여정 추천 팁:</strong> 제민천 카페거리나 유구색동수국정원을 함께 담으시면 지역 상생 할인 혜택을 받으실 수 있습니다.";
+            document.getElementById('resultBox').style.display = 'block';
         }
     </script>
 </body>
