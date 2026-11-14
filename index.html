@@ -3,74 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공주 온-길 (Gongju On-Road) - 스마트 로컬 관광</title>
-    <!-- 카카오 지도 API 불러오기 (https: 명시 및 서비스 로더 반영) -->
+    <title>공주 온-길 (Gongju On-Road) - 백제 고도 스마트 여정</title>
+    <!-- 고풍스러운 명조체 & 본문 폰트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+    <!-- 카카오 지도 API (https: 명시) -->
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ef66a142bfc276b5cdb2c1539d86c551&autoload=false"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
-        body { background-color: #f5f6f8; color: #333; }
+        :root {
+            --bg-hanji: #F9F6F0;        /* 한지 미색 배경 */
+            --card-bg: #FFFDF9;         /* 순백 한지 카드 */
+            --ink-dark: #1C2536;        /* 전통 기와/먹색 */
+            --gold-accent: #B45309;     /* 백제 금동대향로 황동색 */
+            --gold-light: #FEF3C7;      /* 은은한 금빛 배경 */
+            --celadon-green: #2F6F5E;   /* 청자빛 녹색 */
+            --border-wood: #D6CEC2;     /* 고목 테두리 색 */
+        }
 
-        /* 헤더 디자인 */
-        header { background: #2b6cb0; color: white; padding: 15px 20px; text-align: center; font-weight: bold; font-size: 1.2rem; }
-        header span { font-size: 0.85rem; display: block; font-weight: normal; margin-top: 4px; opacity: 0.9; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
+        body { background-color: var(--bg-hanji); color: var(--ink-dark); line-height: 1.5; }
 
-        /* 레이아웃 컨테이너 */
-        .container { display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; padding: 15px; gap: 15px; }
+        /* 고풍스러운 헤더 */
+        header {
+            background: linear-gradient(135deg, #1C2536 0%, #2B3A55 100%);
+            color: #F9F6F0;
+            padding: 22px 20px;
+            text-align: center;
+            border-bottom: 3px solid var(--gold-accent);
+            box-shadow: 0 4px 12px rgba(28, 37, 54, 0.15);
+        }
+        header h1 {
+            font-family: 'Noto Serif KR', serif;
+            font-size: 1.45rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        header span {
+            font-size: 0.85rem;
+            color: #E2D9C8;
+            display: block;
+        }
 
-        /* 지도 영역 */
-        #map { width: 100%; height: 380px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background-color: #e2e8f0; }
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+            gap: 16px;
+        }
 
-        /* 관광지 선택 목록 섹션 */
-        .section-card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        .section-title { font-size: 1.05rem; font-weight: bold; margin-bottom: 12px; color: #2d3748; display: flex; justify-content: space-between; align-items: center; }
+        /* 지도 영역 (액자 프레임 느낌) */
+        .map-wrapper {
+            position: relative;
+            border: 2px solid var(--border-wood);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(28, 37, 54, 0.1);
+            background: #EAE4D7;
+        }
+        #map { width: 100%; height: 390px; }
+        .map-guide-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            background: rgba(28, 37, 54, 0.88);
+            color: #FFFDF9;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid var(--gold-accent);
+            pointer-events: none;
+        }
 
-        /* 장소 체크박스 리스트 */
+        /* 클릭한 관람지 상세 설명 카드 */
+        .detail-card {
+            display: none;
+            background: var(--card-bg);
+            border: 2px solid var(--gold-accent);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 4px 14px rgba(180, 83, 9, 0.12);
+            animation: fadeIn 0.25s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-wood);
+            padding-bottom: 8px;
+        }
+        .detail-title {
+            font-family: 'Noto Serif KR', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--ink-dark);
+        }
+        .detail-desc {
+            font-size: 0.92rem;
+            color: #3D4856;
+            margin-bottom: 14px;
+            line-height: 1.6;
+        }
+        .btn-toggle-place {
+            width: 100%;
+            padding: 11px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-add { background-color: var(--gold-accent); color: white; }
+        .btn-add:hover { background-color: #92400E; }
+        .btn-remove { background-color: #E5E0D8; color: var(--ink-dark); }
+
+        /* 명소 선택 목록 카드 */
+        .section-card {
+            background: var(--card-bg);
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid var(--border-wood);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .section-title {
+            font-family: 'Noto Serif KR', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--ink-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .place-list { display: flex; flex-direction: column; gap: 10px; }
-        .place-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa; }
+        .place-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            border: 1px solid var(--border-wood);
+            border-radius: 8px;
+            background: #FAF7F2;
+            transition: all 0.2s;
+        }
+        .place-item.selected {
+            background: var(--gold-light);
+            border-color: var(--gold-accent);
+        }
         .place-info { display: flex; align-items: center; gap: 10px; }
-        .badge { font-size: 0.75rem; padding: 3px 7px; border-radius: 4px; color: white; font-weight: bold; }
-        .badge-core { background-color: #ed8936; } /* 왕도심 (주요 역사) */
-        .badge-sub { background-color: #38a169; }  /* 원도심/부도심 (숨은 명소) */
+        .place-info input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--gold-accent);
+            cursor: pointer;
+        }
 
-        /* 버튼 디자인 */
-        .btn-calc { width: 100%; padding: 14px; background-color: #2b6cb0; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
-        .btn-calc:hover { background-color: #2c5282; }
+        .badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; color: white; font-weight: 500; }
+        .badge-core { background-color: var(--gold-accent); }
+        .badge-sub { background-color: var(--celadon-green); }
 
-        /* 결과 창 섹션 */
-        .result-box { display: none; background: #ebf8ff; border: 1px solid #bee3f8; padding: 16px; border-radius: 12px; margin-top: 10px; }
-        .result-title { font-weight: bold; color: #2b6cb0; margin-bottom: 8px; }
-        .route-path { font-size: 0.95rem; font-weight: bold; color: #2d3748; line-height: 1.6; }
-        .sub-recommend-notice { font-size: 0.85rem; color: #2f855a; margin-top: 10px; background: #f0fff4; padding: 8px; border-radius: 6px; border: 1px solid #c6f6d5; }
+        /* 최적 동선 생성 버튼 */
+        .btn-calc {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #1C2536 0%, #2B3A55 100%);
+            color: #FFFDF9;
+            border: 1px solid var(--gold-accent);
+            border-radius: 10px;
+            font-family: 'Noto Serif KR', serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            margin-top: 14px;
+            letter-spacing: 0.5px;
+            transition: transform 0.1s;
+        }
+        .btn-calc:hover { opacity: 0.95; }
+        .btn-calc:active { transform: scale(0.99); }
+
+        /* 추천 결과 영역 */
+        .result-box {
+            display: none;
+            background: var(--card-bg);
+            border: 2px solid var(--celadon-green);
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(47, 111, 94, 0.1);
+        }
+        .result-title {
+            font-family: 'Noto Serif KR', serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--celadon-green);
+            margin-bottom: 10px;
+        }
+        .route-path {
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--ink-dark);
+            line-height: 1.7;
+            background: #F4F1EA;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .sub-recommend-notice {
+            font-size: 0.88rem;
+            color: #1E4D40;
+            margin-top: 12px;
+            background: #E8F3F0;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #B7DCD1;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        공주 온-길 (Gongju On-Road)
-        <span>원도심 & 부도심 상생 최적 루트 추천 시스템</span>
+        <h1>공주 온-길 (Gongju On-Road)</h1>
+        <span>천년 고도 백제의 숨결, 원도심·부도심 상생 여정 안내</span>
     </header>
 
     <div class="container">
         <!-- 1. 카카오 지도 표시 영역 -->
-        <div id="map"></div>
-
-        <!-- 2. 장소 선택 바구니 -->
-        <div class="section-card">
-            <div class="section-title">
-                📍 가고 싶은 명소 선택
-                <span style="font-size: 0.8rem; font-weight: normal; color: #718096;">(원하는 곳을 체크하세요)</span>
-            </div>
-            
-            <div class="place-list" id="placeList">
-                <!-- 자바스크립트로 DB 목록이 로드됩니다 -->
-            </div>
-
-            <button class="btn-calc" onclick="calculateBestRoute()">✨ AI 최적 방문 동선 생성하기</button>
+        <div class="map-wrapper">
+            <div class="map-guide-badge">📍 지도의 깃발을 누르면 상세 설명과 선택이 가능합니다</div>
+            <div id="map"></div>
         </div>
 
-        <!-- 3. 추천 결과 표시 영역 -->
+        <!-- 2. 지도에서 특정 관람지 클릭 시 나타나는 상세 설명란 -->
+        <div class="detail-card" id="detailCard">
+            <div class="detail-header">
+                <span class="detail-title" id="detailName">관람지 이름</span>
+                <span class="badge" id="detailBadge">권역</span>
+            </div>
+            <p class="detail-desc" id="detailDesc">상세 설명이 이곳에 표시됩니다.</p>
+            <button class="btn-toggle-place" id="detailToggleBtn" onclick="toggleCurrentDetailPlace()">방문 코스에 담기</button>
+        </div>
+
+        <!-- 3. 장소 선택 바구니 -->
+        <div class="section-card">
+            <div class="section-title">
+                <span>📜 여정 관람지 목록</span>
+                <span style="font-size: 0.8rem; font-family: 'Noto Sans KR'; font-weight: normal; color: #6B7280;">지도 클릭 또는 체크박스 선택</span>
+            </div>
+            
+            <div class="place-list" id="placeList"></div>
+
+            <button class="btn-calc" onclick="calculateBestRoute()">🧭 최적 백제 여정 동선 그리기</button>
+        </div>
+
+        <!-- 4. 추천 결과 표시 영역 -->
         <div class="result-box" id="resultBox">
-            <div class="result-title">🗺️ 추천 최적 코스 안내</div>
+            <div class="result-title">🏮 추천 최적 관람 동선</div>
             <div class="route-path" id="routePath"></div>
             <div class="sub-recommend-notice" id="subNotice"></div>
         </div>
@@ -78,19 +271,71 @@
 
     <script>
         // ==========================================
-        // [1] 장소 데이터베이스 (GPS 좌표 등록)
+        // [1] 공주 관람지 데이터베이스 (상세 역사 설명 포함)
         // ==========================================
         const placesDB = [
-            { id: 0, name: "공산성", type: "core", lat: 36.4623, lng: 127.1264, desc: "왕도심 대표 역사 유적지" },
-            { id: 1, name: "무령왕릉과 왕릉원", type: "core", lat: 36.4601, lng: 127.1132, desc: "백제 웅진기 왕릉군" },
-            { id: 2, name: "제민천 카페거리", type: "sub", lat: 36.4521, lng: 127.1223, desc: "원도심 레트로 감성 골목길" },
-            { id: 3, name: "공주 산성시장", type: "sub", lat: 36.4565, lng: 127.1251, desc: "원도심 밤 먹거리 & 전통시장" },
-            { id: 4, name: "유구색동수국정원", type: "sub", lat: 36.5412, lng: 126.9234, desc: "부도심 유구읍 감성 자연 스팟" },
-            { id: 5, name: "마곡사", type: "sub", lat: 36.5583, lng: 127.0125, desc: "부도심 사곡면 천년고찰" }
+            {
+                id: 0,
+                name: "공산성",
+                type: "core",
+                lat: 36.4623,
+                lng: 127.1264,
+                shortDesc: "백제 웅진시대를 지킨 천년의 산성",
+                fullDesc: "백제가 웅진(공주)으로 천도한 475년부터 538년까지 도성을 방어하던 왕성입니다. 금강을 굽어보는 성곽길을 따라 걸으며 백제 왕실의 기상과 아름다운 야경을 감상할 수 있습니다."
+            },
+            {
+                id: 1,
+                name: "무령왕릉과 왕릉원",
+                type: "core",
+                lat: 36.4601,
+                lng: 127.1132,
+                shortDesc: "백제 중흥을 이끈 무령왕의 고분군",
+                fullDesc: "도굴되지 않은 채 발견되어 백제 역사의 타임캡슐로 불리는 무령왕릉을 비롯한 웅진시대 왕족들의 무덤이 모여 있는 유네스코 세계유산입니다."
+            },
+            {
+                id: 2,
+                name: "제민천 카페거리",
+                type: "sub",
+                lat: 36.4521,
+                lng: 127.1223,
+                shortDesc: "옛 물길 따라 흐르는 원도심 감성 골목",
+                fullDesc: "공주 원도심을 가로지르는 제민천을 따라 오래된 한옥과 적산가옥을 개조한 고풍스러운 카페, 독립서점, 공방들이 어우러진 산책 명소입니다."
+            },
+            {
+                id: 3,
+                name: "공주 산성시장",
+                type: "sub",
+                lat: 36.4565,
+                lng: 127.1251,
+                shortDesc: "공주 알밤과 전통 먹거리가 가득한 시장",
+                fullDesc: "충남을 대표하는 전통시장으로, 공주 특산물인 알밤을 활용한 다양한 주전부리와 정겨운 로컬 맛집, 밤마실 야시장을 즐길 수 있습니다."
+            },
+            {
+                id: 4,
+                name: "유구색동수국정원",
+                type: "sub",
+                lat: 36.5412,
+                lng: 126.9234,
+                shortDesc: "유구천을 수놓은 중부권 최대 수국 명소",
+                fullDesc: "직물 산업의 역사를 품은 부도심 유구읍의 유구천 수변을 따라 형형색색의 수국이 만개하는 생태 정원으로, 한적하고 아름다운 자연 산책을 즐길 수 있습니다."
+            },
+            {
+                id: 5,
+                name: "마곡사",
+                type: "sub",
+                lat: 36.5583,
+                lng: 127.0125,
+                shortDesc: "태화산 품에 안긴 천년 고찰 유네스코 유산",
+                fullDesc: "신라 선덕여왕 때 창건된 유서 깊은 사찰로, 봄에는 벚꽃과 신록이, 가을에는 단풍이 계곡과 어우러져 '춘마곡 추갑사'라 불리는 명승지입니다."
+            }
         ];
 
         let map;
-        let markers = [];
+        let selectedIds = new Set();     // 선택된 관람지 ID 저장
+        let activeDetailId = null;       // 현재 상세 설명란에 열린 관람지 ID
+        let mapMarkers = {};             // 지도 마커 객체 보관
+        let customOverlays = {};         // 마커 위 이름표 보관
+        let polyline = null;             // 지도 경로 선 객체
 
         // ==========================================
         // [2] 카카오 지도 안전 로딩 및 초기화
@@ -98,77 +343,168 @@
         window.onload = function() {
             if (typeof kakao !== 'undefined' && kakao.maps) {
                 kakao.maps.load(function() {
-                    initMapAndList();
+                    initApp();
                 });
             } else {
-                alert("카카오 지도 SDK를 불러오지 못했습니다. 카카오 개발자 센터의 [플랫폼 > Web]에 도메인(https://202620106-creator.github.io)이 등록되어 있는지 확인해주세요.");
+                alert("카카오 지도 SDK를 불러오지 못했습니다. 도메인 설정을 확인해주세요.");
             }
         };
 
-        function initMapAndList() {
+        function initApp() {
             const mapContainer = document.getElementById('map');
             const mapOption = {
-                center: new kakao.maps.LatLng(36.4565, 127.1150),
+                center: new kakao.maps.LatLng(36.4620, 127.1100),
                 level: 8
             };
             map = new kakao.maps.Map(mapContainer, mapOption);
 
-            // 장소 리스트 생성
-            const placeListContainer = document.getElementById('placeList');
-            placeListContainer.innerHTML = ''; // 초기화
+            renderPlaceList();
+            renderAllMapMarkers();
+        }
+
+        // ==========================================
+        // [3] 지도 위 전체 관람지 마커 생성 및 클릭 이벤트
+        // ==========================================
+        function renderAllMapMarkers() {
+            // 선택 전 기본 마커(먹색/청자색 느낌) vs 선택 후 강조 마커(황금색 별 마커)
+            const normalMarkerImg = new kakao.maps.MarkerImage(
+                "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png",
+                new kakao.maps.Size(32, 35)
+            );
+            const selectedMarkerImg = new kakao.maps.MarkerImage(
+                "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
+                new kakao.maps.Size(30, 42)
+            );
+
             placesDB.forEach(place => {
+                const pos = new kakao.maps.LatLng(place.lat, place.lng);
+                const isSelected = selectedIds.has(place.id);
+
+                // 기존 마커가 있으면 제거 후 갱신
+                if (mapMarkers[place.id]) mapMarkers[place.id].setMap(null);
+                if (customOverlays[place.id]) customOverlays[place.id].setMap(null);
+
+                const marker = new kakao.maps.Marker({
+                    position: pos,
+                    map: map,
+                    image: isSelected ? selectedMarkerImg : normalMarkerImg,
+                    title: place.name
+                });
+
+                // 마커 클릭 시 -> 상세 설명란 표시!
+                kakao.maps.event.addListener(marker, 'click', function() {
+                    openPlaceDetail(place.id);
+                });
+
+                // 마커 아래 고풍스러운 이름표(CustomOverlay) 부착
+                const labelBg = isSelected ? '#B45309' : '#1C2536';
+                const labelPrefix = isSelected ? '★ ' : '';
+                const overlayContent = `
+                    <div onclick="openPlaceDetail(${place.id})" style="
+                        cursor: pointer;
+                        background: ${labelBg};
+                        color: #FFFDF9;
+                        padding: 3px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        font-weight: bold;
+                        border: 1px solid #F9F6F0;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                        margin-top: 4px;
+                        white-space: nowrap;
+                    ">${labelPrefix}${place.name}</div>
+                `;
+
+                const overlay = new kakao.maps.CustomOverlay({
+                    position: pos,
+                    content: overlayContent,
+                    yAnchor: 0
+                });
+                overlay.setMap(map);
+
+                mapMarkers[place.id] = marker;
+                customOverlays[place.id] = overlay;
+            });
+        }
+
+        // ==========================================
+        // [4] 특정 관람지 클릭 시 상세 설명란 열기 & 담기
+        // ==========================================
+        function openPlaceDetail(id) {
+            activeDetailId = id;
+            const place = placesDB.find(p => p.id === id);
+            const detailCard = document.getElementById('detailCard');
+            const detailName = document.getElementById('detailName');
+            const detailBadge = document.getElementById('detailBadge');
+            const detailDesc = document.getElementById('detailDesc');
+            const toggleBtn = document.getElementById('detailToggleBtn');
+
+            detailName.innerText = place.name;
+            detailBadge.innerText = place.type === 'core' ? '왕도심 핵심 유적' : '원도심·부도심 명소';
+            detailBadge.className = 'badge ' + (place.type === 'core' ? 'badge-core' : 'badge-sub');
+            detailDesc.innerText = place.fullDesc;
+
+            // 이미 선택된 장소인지에 따라 버튼 문구/색상 변경
+            if (selectedIds.has(id)) {
+                toggleBtn.innerText = "✓ 방문 코스에 담김 (클릭 시 해제)";
+                toggleBtn.className = "btn-toggle-place btn-remove";
+            } else {
+                toggleBtn.innerText = "📌 이 관람지를 방문 코스에 담기 (황금 마커 표시)";
+                toggleBtn.className = "btn-toggle-place btn-add";
+            }
+
+            detailCard.style.display = 'block';
+
+            // 지도 중심을 해당 위치로 부드럽게 이동
+            map.panTo(new kakao.maps.LatLng(place.lat, place.lng));
+        }
+
+        function toggleCurrentDetailPlace() {
+            if (activeDetailId === null) return;
+            togglePlaceSelection(activeDetailId);
+            openPlaceDetail(activeDetailId); // 버튼 상태 즉시 갱신
+        }
+
+        function togglePlaceSelection(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            renderPlaceList();
+            renderAllMapMarkers();
+        }
+
+        // ==========================================
+        // [5] 하단 관람지 체크박스 목록 렌더링
+        // ==========================================
+        function renderPlaceList() {
+            const container = document.getElementById('placeList');
+            container.innerHTML = '';
+
+            placesDB.forEach(place => {
+                const isSelected = selectedIds.has(place.id);
                 const badgeClass = place.type === 'core' ? 'badge-core' : 'badge-sub';
-                const badgeText = place.type === 'core' ? '왕도심' : '부도심/원도심';
+                const badgeText = place.type === 'core' ? '왕도심' : '원도심/부도심';
 
                 const itemHTML = `
-                    <div class="place-item">
+                    <div class="place-item ${isSelected ? 'selected' : ''}">
                         <div class="place-info">
-                            <input type="checkbox" id="place-${place.id}" value="${place.id}" onchange="updateMarkers()">
-                            <label for="place-${place.id}" style="cursor:pointer;">
-                                <strong>${place.name}</strong> 
-                                <span style="font-size:0.8rem; color:#718096; display:block;">${place.desc}</span>
-                            </label>
+                            <input type="checkbox" id="chk-${place.id}" ${isSelected ? 'checked' : ''} onchange="togglePlaceSelection(${place.id})">
+                            <div onclick="openPlaceDetail(${place.id})" style="cursor:pointer;">
+                                <strong style="font-family: 'Noto Serif KR', serif;">${place.name}</strong>
+                                <span style="font-size:0.8rem; color:#5A6577; display:block;">${place.shortDesc}</span>
+                            </div>
                         </div>
                         <span class="badge ${badgeClass}">${badgeText}</span>
                     </div>
                 `;
-                placeListContainer.innerHTML += itemHTML;
+                container.innerHTML += itemHTML;
             });
-        }
-
-        // 체크박스 선택 시 마커 표시
-        function updateMarkers() {
-            if (!map) return;
-            markers.forEach(m => m.setMap(null));
-            markers = [];
-
-            const selectedIds = getSelectedPlaceIds();
-            const bounds = new kakao.maps.LatLngBounds();
-
-            selectedIds.forEach(id => {
-                const place = placesDB.find(p => p.id === id);
-                const loc = new kakao.maps.LatLng(place.lat, place.lng);
-
-                const marker = new kakao.maps.Marker({
-                    position: loc,
-                    map: map
-                });
-                markers.push(marker);
-                bounds.extend(loc);
-            });
-
-            if (selectedIds.length > 0) {
-                map.setBounds(bounds);
-            }
-        }
-
-        function getSelectedPlaceIds() {
-            const checkboxes = document.querySelectorAll('#placeList input[type="checkbox"]:checked');
-            return Array.from(checkboxes).map(cb => parseInt(cb.value));
         }
 
         // ==========================================
-        // [3] 최적 경로 정렬 알고리즘
+        // [6] 최적 경로 계산 및 지도 위 경로선 그리기
         // ==========================================
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371;
@@ -181,14 +517,13 @@
         }
 
         function calculateBestRoute() {
-            const selectedIds = getSelectedPlaceIds();
-
-            if (selectedIds.length < 2) {
-                alert("최적 경로를 계산하려면 최소 2개 이상의 장소를 선택해주세요!");
+            const ids = Array.from(selectedIds);
+            if (ids.length < 2) {
+                alert("최적 여정을 그리려면 지도나 목록에서 최소 2곳 이상의 관람지를 담아주세요!");
                 return;
             }
 
-            let unvisited = selectedIds.map(id => placesDB.find(p => p.id === id));
+            let unvisited = ids.map(id => placesDB.find(p => p.id === id));
             let current = unvisited.shift();
             let route = [current];
 
@@ -207,25 +542,41 @@
                 route.push(current);
             }
 
-            renderResult(route);
-        }
+            // 기존 선 지우기
+            if (polyline) polyline.setMap(null);
 
-        // ==========================================
-        // [4] 결과 출력 및 혜택 메시지
-        // ==========================================
-        function renderResult(route) {
+            // 지도 위에 황금빛 경로 선 그리기 & 화면 맞춤
+            const linePath = [];
+            const bounds = new kakao.maps.LatLngBounds();
+
+            route.forEach(p => {
+                const latLng = new kakao.maps.LatLng(p.lat, p.lng);
+                linePath.push(latLng);
+                bounds.extend(latLng);
+            });
+
+            polyline = new kakao.maps.Polyline({
+                path: linePath,
+                strokeWeight: 5,
+                strokeColor: '#B45309',
+                strokeOpacity: 0.85,
+                strokeStyle: 'shortdash'
+            });
+            polyline.setMap(map);
+            map.setBounds(bounds);
+
+            // 결과 텍스트 출력
             const resultBox = document.getElementById('resultBox');
             const routePath = document.getElementById('routePath');
             const subNotice = document.getElementById('subNotice');
 
-            const pathText = route.map(p => p.name).join(" ➔ ");
-            routePath.innerHTML = pathText;
+            routePath.innerHTML = route.map((p, idx) => `${idx + 1}. ${p.name}`).join(" &nbsp;➔&nbsp; ");
 
             const hasSubPlace = route.some(p => p.type === 'sub');
             if (hasSubPlace) {
-                subNotice.innerHTML = "🌱 <strong>부도심 상생 코스 포함 완료!</strong><br>원도심/부도심 명소가 포함되어 공주 산성시장 및 제민천 카페 10% 할인 쿠폰이 자동 발급됩니다.";
+                subNotice.innerHTML = "🌿 <strong>공주 상생 여정 혜택 적용!</strong><br>원도심·부도심 명소가 포함되어 공주 산성시장 및 제민천 공방·카페 10% 상생 쿠폰이 발급됩니다.";
             } else {
-                subNotice.innerHTML = "💡 <strong>추천 팁:</strong> 제민천 카페거리나 유구 수국정원을 추가하시면 부도심 할인 쿠폰 혜택을 받으실 수 있습니다!";
+                subNotice.innerHTML = "💡 <strong>여정 추천 팁:</strong> 지도를 둘러보시고 제민천 카페거리나 유구색동수국정원을 함께 담으시면 지역 상생 할인 혜택을 받으실 수 있습니다.";
             }
 
             resultBox.style.display = 'block';
